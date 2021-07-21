@@ -3,15 +3,11 @@ require 'uri'
 require 'json'
 require 'mail'
 
-serverName = '<server name>'
+SERVER_NAME = '<server name>'
+
 emailSender = '<sender email>'
 emailRecipients = '<recipient emails'
 appPassword = '<app password>'
-def check_status
-    uri = URI.parse('https://frontier.ffxiv.com/worldStatus/current_status.json')
-      response = JSON.parse("#{Net::HTTP.get(uri)}")
-        return response['#{serverName}']
-end
 
 options = { :address              => "smtp.gmail.com",
             :port                 => 587,
@@ -20,11 +16,21 @@ options = { :address              => "smtp.gmail.com",
             :authentication       => 'plain',
             :enable_starttls_auto => true  }
             
-tonberry_status = check_status
-puts 'Checking ' +serverName+ ' status...'
+def check_status
+    serverName = '<server name>'
 
-while tonberry_status == 3 do 
-    tonberry_status = check_status
+    uri = URI.parse('https://frontier.ffxiv.com/worldStatus/current_status.json')
+    response = JSON.parse("#{Net::HTTP.get(uri)}")
+        
+    return response["#{SERVER_NAME}"]
+end
+
+server_status = check_status
+puts "Checking #{SERVER_NAME} status..."
+
+#3 = server is down
+while server_status == 3 do 
+    server_status = check_status
 end
 
 Mail.defaults do
@@ -34,6 +40,6 @@ end
 Mail.deliver do
        to emailRecipients
      from emailSender
-  subject +serverName+ ' is up!'
+  subject "#{SERVER_NAME} is up!'"
      body 'Server up!'
 end
